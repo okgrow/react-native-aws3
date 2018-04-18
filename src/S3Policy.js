@@ -24,11 +24,17 @@ export class S3Policy {
     options || (options = {});
 
     assert(options.key, "Must provide `key` option with the object key");
-    assert(options.bucket, "Must provide `bucket` option with your AWS bucket name");
     assert(options.contentType, "Must provide `contentType` option with the object content type");
-    assert(options.region, "Must provide `region` option with your AWS region");
     assert(options.date, "Must provide `date` option with the current date");
     assert(options.accessKey, "Must provide `accessKey` option with your AWSAccessKeyId");
+    if (options.presign) {
+      assert(options.acl, "Must provide 'acl' with presign option");
+      assert(options.policy, "Must provide 'policy' with presign option");
+      assert(options.signature, "Must provide 'signature' with presign option");
+      return formatPolicyForPresign(options);
+    }
+    assert(options.bucket, "Must provide `bucket` option with your AWS bucket name");
+    assert(options.region, "Must provide `region` option with your AWS region");
     assert(options.secretKey, "Must provide `secretKey` option with your AWSSecretKey");
 
     const date = options.date;
@@ -104,6 +110,17 @@ const getSignature = (base64EncodedPolicy, options) => {
     base64EncodedPolicy,
     getSignatureKey(options)
   ).toString(CryptoJS.enc.Hex);
+}
+
+const formatPolicyForPresign = (options) => {
+  return {
+    "key": options.key,
+    "AWSAccessKeyId": options.accessKey,
+    "acl": options.acl,
+    "policy": options.policy,
+    "signature": options.signature,
+    "Content-Type": options.contentType,
+  }
 }
 
 const getSignatureKey = (options) => {
